@@ -1,0 +1,4 @@
+interface:
+  display_name: "Reglas de La República"
+  short_description: "Mantiene reglas y ficción del juego"
+  default_prompt: "Use $republica-game-rules al diseñar reglas, personajes o contenido narrativo."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "LAN Party Controller"
+  short_description: "Protege arquitectura PC y celulares LAN"
+  default_prompt: "Use $lan-party-controller al diseñar sesiones, join o pantallas privadas por LAN."

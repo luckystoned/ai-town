@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI Town Engine"
+  short_description: "Preserva el engine y su ownership de estado"
+  default_prompt: "Use $ai-town-engine al modificar internals, inputs o simulación de AI Town."

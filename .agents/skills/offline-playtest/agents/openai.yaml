@@ -1,0 +1,4 @@
+interface:
+  display_name: "Offline Playtest"
+  short_description: "Valida juego local sin Internet"
+  default_prompt: "Use $offline-playtest para planificar o ejecutar una prueba completa sin Internet."

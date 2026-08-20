@@ -1,0 +1,4 @@
+interface:
+  display_name: "LM Studio Local AI"
+  short_description: "Guía la IA local mediante LM Studio"
+  default_prompt: "Use $lm-studio-local-ai para diseñar integración local de chat o embeddings."
