@@ -1,17 +1,30 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
+import {
+  playableCharacters,
+  type PlayableCharacterId,
+} from '../../../shared/playableCharacters';
 import { createControllerToken, controllerTokenStorageKey } from './controllerToken';
+
+type ConnectedPlayer = {
+  name: string;
+  joinedAt: number;
+  characterId?: PlayableCharacterId;
+};
 
 export default function JoinLobbyPage({ gameCode: rawGameCode }: { gameCode: string }) {
   const gameCode = rawGameCode.trim().toUpperCase();
   const lobby = useQuery(api.gameSessions.getLobby, { gameCode });
   const joinGameSession = useMutation(api.gameSessions.joinGameSession);
   const reconnectGameSession = useMutation(api.gameSessions.reconnectGameSession);
+  const selectCharacter = useMutation(api.gameSessions.selectCharacter);
   const [name, setName] = useState('');
-  const [connectedName, setConnectedName] = useState<string>();
+  const [connectedPlayer, setConnectedPlayer] = useState<ConnectedPlayer>();
+  const [controllerToken, setControllerToken] = useState<string>();
   const [error, setError] = useState<string>();
   const [submitting, setSubmitting] = useState(false);
+  const [selecting, setSelecting] = useState<PlayableCharacterId>();
   const [checkingReconnect, setCheckingReconnect] = useState(true);
   const storageKey = controllerTokenStorageKey(gameCode);
 
@@ -24,7 +37,10 @@ export default function JoinLobbyPage({ gameCode: rawGameCode }: { gameCode: str
     let active = true;
     reconnectGameSession({ gameCode, token })
       .then((player) => {
-        if (active) setConnectedName(player.name);
+        if (active) {
+          setControllerToken(token);
+          setConnectedPlayer(player);
+        }
       })
       .catch(() => {
         localStorage.removeItem(storageKey);
@@ -45,11 +61,26 @@ export default function JoinLobbyPage({ gameCode: rawGameCode }: { gameCode: str
     try {
       const result = await joinGameSession({ gameCode, name, token });
       localStorage.setItem(storageKey, token);
-      setConnectedName(result.player.name);
+      setControllerToken(token);
+      setConnectedPlayer(result.player);
     } catch (caught) {
       setError(errorMessage(caught));
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const chooseCharacter = async (characterId: PlayableCharacterId) => {
+    if (!controllerToken) return;
+    setSelecting(characterId);
+    setError(undefined);
+    try {
+      const player = await selectCharacter({ gameCode, controllerToken, characterId });
+      setConnectedPlayer(player);
+    } catch (caught) {
+      setError(errorMessage(caught));
+    } finally {
+      setSelecting(undefined);
     }
   };
 
@@ -73,14 +104,53 @@ export default function JoinLobbyPage({ gameCode: rawGameCode }: { gameCode: str
           <p className="mt-8 text-center text-red-300" role="alert">
             La partida no existe.
           </p>
-        ) : connectedName ? (
-          <div
-            className="mt-8 border-2 border-emerald-400 bg-emerald-950/70 p-5 text-center"
-            data-testid="connected-player"
-          >
-            <p className="text-sm uppercase text-emerald-200">Conectado</p>
-            <p className="mt-2 text-2xl">✓ {connectedName}</p>
-            <p className="mt-3 text-sm text-slate-300">Ya aparecés en la pantalla principal.</p>
+        ) : connectedPlayer ? (
+          <div className="mt-8" data-testid="connected-player">
+            <p className="text-center text-xl">Hola, {connectedPlayer.name}</p>
+            <h2 className="mt-2 text-center font-display text-2xl text-[#fec742]">
+              Elegí tu personaje
+            </h2>
+            <div className="mt-5 grid gap-3">
+              {playableCharacters.map((character) => {
+                const selectedByMe = connectedPlayer.characterId === character.id;
+                const taken = !selectedByMe && lobby.players.some(
+                  (player) => player.characterId === character.id,
+                );
+                const state = selectedByMe
+                  ? 'SELECCIONADO POR MÍ'
+                  : taken
+                    ? 'OCUPADO'
+                    : 'DISPONIBLE';
+                return (
+                  <button
+                    aria-pressed={selectedByMe}
+                    className={`border-2 p-3 text-left transition-colors ${
+                      selectedByMe
+                        ? 'border-emerald-400 bg-emerald-950/70'
+                        : taken
+                          ? 'cursor-not-allowed border-slate-700 bg-slate-900/70 opacity-55'
+                          : 'border-[#3a4466] bg-[#181425] hover:border-[#fec742]'
+                    }`}
+                    disabled={taken || selecting !== undefined}
+                    key={character.id}
+                    onClick={() => void chooseCharacter(character.id)}
+                    type="button"
+                  >
+                    <span className="block text-lg">{character.shortName}</span>
+                    <span className="block text-sm text-[#fec742]">{character.archetype}</span>
+                    <span className="mt-1 block text-xs text-slate-300">
+                      {character.shortDescription}
+                    </span>
+                    <span className="mt-2 block text-xs font-bold uppercase">{state}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {error && (
+              <p className="mt-4 text-center text-red-300" role="alert">
+                {error}
+              </p>
+            )}
           </div>
         ) : (
           <form className="mt-8" onSubmit={(event) => void join(event)}>

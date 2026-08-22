@@ -17,6 +17,18 @@ export default defineSchema({
     name: v.string(),
     tokenHash: v.string(),
     joinedAt: v.number(),
+    characterId: v.optional(
+      v.union(
+        v.literal('san-martin'),
+        v.literal('belgrano'),
+        v.literal('guemes'),
+        v.literal('azurduy'),
+        v.literal('moreno'),
+        v.literal('rosas'),
+        v.literal('sarmiento'),
+        v.literal('brown'),
+      ),
+    ),
   })
     .index('sessionId', ['sessionId'])
     .index('sessionTokenHash', ['sessionId', 'tokenHash']),

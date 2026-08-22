@@ -1,3 +1,8 @@
+import {
+  isPlayableCharacterId,
+  type PlayableCharacterId,
+} from '../shared/playableCharacters';
+
 export const MAX_LOBBY_PLAYERS = 4;
 export const GAME_CODE_LENGTH = 6;
 
@@ -13,6 +18,7 @@ export type LobbyPlayerState = {
   name: string;
   tokenHash: string;
   joinedAt: number;
+  characterId?: PlayableCharacterId;
 };
 
 export function normalizeGameCode(code: string) {
@@ -86,6 +92,31 @@ export function requireReconnectPlayer(players: LobbyPlayerState[], tokenHash: s
   return player;
 }
 
+export function validatePlayableCharacterId(characterId: string): PlayableCharacterId {
+  if (!isPlayableCharacterId(characterId)) {
+    throw new Error('El personaje seleccionado no existe.');
+  }
+  return characterId;
+}
+
+export function planCharacterSelection(
+  session: LobbySessionState | null,
+  players: LobbyPlayerState[],
+  tokenHash: string,
+  requestedCharacterId: string,
+) {
+  requireLobbySession(session);
+  const player = requireReconnectPlayer(players, tokenHash);
+  const characterId = validatePlayableCharacterId(requestedCharacterId);
+  const taken = players.some(
+    (candidate) => candidate.tokenHash !== tokenHash && candidate.characterId === characterId,
+  );
+  if (taken) {
+    throw new Error('Ese personaje ya fue elegido por otro jugador.');
+  }
+  return { player, characterId };
+}
+
 export function toPublicLobby(session: LobbySessionState, players: LobbyPlayerState[]) {
   return {
     code: session.code,
@@ -93,7 +124,12 @@ export function toPublicLobby(session: LobbySessionState, players: LobbyPlayerSt
     createdAt: session.createdAt,
     maxPlayers: MAX_LOBBY_PLAYERS,
     players: players
-      .map(({ name, joinedAt }) => ({ name, joinedAt }))
+      .map(({ name, joinedAt, characterId }) => ({
+        name,
+        joinedAt,
+        ...(characterId ? { characterId } : {}),
+      }))
       .sort((left, right) => left.joinedAt - right.joinedAt),
+    readyPlayers: players.filter((player) => player.characterId !== undefined).length,
   };
 }

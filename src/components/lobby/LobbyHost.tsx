@@ -2,6 +2,7 @@ import { useMutation, useQuery } from 'convex/react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useMemo, useState } from 'react';
 import { api } from '../../../convex/_generated/api';
+import { getPlayableCharacter } from '../../../shared/playableCharacters';
 import { getLobbyJoinUrl } from './lobbyUrl';
 
 export default function LobbyHost() {
@@ -27,7 +28,10 @@ export default function LobbyHost() {
 
   if (!gameCode) {
     return (
-      <section className="mx-auto mb-5 w-[min(92vw,46rem)] border-4 border-[#171421] bg-[#23263a]/95 p-4 text-center text-white shadow-xl">
+      <section
+        className="pointer-events-auto fixed right-3 top-3 z-20 max-h-[calc(100vh-1.5rem)] w-[min(92vw,46rem)] overflow-y-auto border-4 border-[#171421] bg-[#23263a]/95 p-4 text-center text-white shadow-xl"
+        data-testid="lobby-host-panel"
+      >
         <h2 className="font-display text-3xl tracking-wide text-[#fec742] sm:text-5xl">
           La República Imposible
         </h2>
@@ -51,7 +55,10 @@ export default function LobbyHost() {
 
   const players = lobby?.players ?? [];
   return (
-    <section className="mx-auto mb-5 grid w-[min(94vw,58rem)] gap-5 border-4 border-[#171421] bg-[#23263a]/95 p-5 text-white shadow-xl md:grid-cols-[1fr_auto]">
+    <section
+      className="pointer-events-auto fixed right-3 top-3 z-20 grid max-h-[calc(100vh-1.5rem)] w-[min(94vw,50rem)] gap-5 overflow-y-auto border-4 border-[#171421] bg-[#23263a]/95 p-5 text-white shadow-xl md:grid-cols-[1fr_auto]"
+      data-testid="lobby-host-panel"
+    >
       <div>
         <h2 className="font-display text-3xl tracking-wide text-[#fec742] sm:text-5xl">
           La República Imposible
@@ -64,12 +71,21 @@ export default function LobbyHost() {
           {gameCode}
         </p>
         <p className="mt-4 text-sm uppercase text-slate-300">Jugadores conectados</p>
+        <p className="mt-1 text-lg" data-testid="ready-count">
+          Jugadores listos: {lobby?.readyPlayers ?? 0} / 4
+        </p>
         <ol className="mt-2 grid gap-2" aria-label="Jugadores conectados">
           {Array.from({ length: 4 }, (_, index) => {
             const player = players[index];
             return (
               <li className="border-2 border-[#3a4466] bg-[#181425] px-3 py-2" key={index}>
-                {player ? `✓ ${player.name}` : '○ Esperando...'}
+                {player
+                  ? `✓ ${player.name} — ${
+                      player.characterId
+                        ? getPlayableCharacter(player.characterId).shortName
+                        : 'Sin personaje'
+                    }`
+                  : '○ Esperando jugador...'}
               </li>
             );
           })}
