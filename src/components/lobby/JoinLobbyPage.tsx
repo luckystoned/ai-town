@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import {
+  getPlayableCharacter,
   playableCharacters,
   type PlayableCharacterId,
 } from '../../../shared/playableCharacters';
@@ -27,6 +28,9 @@ export default function JoinLobbyPage({ gameCode: rawGameCode }: { gameCode: str
   const [selecting, setSelecting] = useState<PlayableCharacterId>();
   const [checkingReconnect, setCheckingReconnect] = useState(true);
   const storageKey = controllerTokenStorageKey(gameCode);
+  const selectedCharacter = connectedPlayer?.characterId
+    ? getPlayableCharacter(connectedPlayer.characterId)
+    : undefined;
 
   useEffect(() => {
     const token = localStorage.getItem(storageKey);
@@ -110,6 +114,34 @@ export default function JoinLobbyPage({ gameCode: rawGameCode }: { gameCode: str
             <h2 className="mt-2 text-center font-display text-2xl text-[#fec742]">
               Elegí tu personaje
             </h2>
+            {selectedCharacter && (
+              <section
+                aria-label={`Skills de ${selectedCharacter.shortName}`}
+                className="mt-5 border-2 border-[#fec742] bg-[#181425] p-4"
+                data-testid="selected-character-skills"
+              >
+                <h3 className="text-center font-display text-2xl text-white">
+                  {selectedCharacter.shortName}
+                </h3>
+                <p className="text-center text-sm text-[#fec742]">
+                  {selectedCharacter.archetype}
+                </p>
+                <dl className="mt-4 grid gap-3">
+                  {[
+                    selectedCharacter.skills.active,
+                    selectedCharacter.skills.passive,
+                    selectedCharacter.skills.ultimate,
+                  ].map((skill) => (
+                    <div key={skill.id}>
+                      <dt className="text-xs font-bold uppercase tracking-wide text-slate-400">
+                        {skill.kind}
+                      </dt>
+                      <dd className="text-base text-white">{skill.name}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </section>
+            )}
             <div className="mt-5 grid gap-3">
               {playableCharacters.map((character) => {
                 const selectedByMe = connectedPlayer.characterId === character.id;

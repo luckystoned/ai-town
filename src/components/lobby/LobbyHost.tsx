@@ -77,15 +77,21 @@ export default function LobbyHost() {
         <ol className="mt-2 grid gap-2" aria-label="Jugadores conectados">
           {Array.from({ length: 4 }, (_, index) => {
             const player = players[index];
+            const character = player?.characterId
+              ? getPlayableCharacter(player.characterId)
+              : undefined;
             return (
               <li className="border-2 border-[#3a4466] bg-[#181425] px-3 py-2" key={index}>
-                {player
-                  ? `✓ ${player.name} — ${
-                      player.characterId
-                        ? getPlayableCharacter(player.characterId).shortName
-                        : 'Sin personaje'
-                    }`
-                  : '○ Esperando jugador...'}
+                {player ? (
+                  <>
+                    <span>✓ {player.name} — {character?.shortName ?? 'Sin personaje'}</span>
+                    {character && (
+                      <span className="block text-sm text-[#fec742]">{character.archetype}</span>
+                    )}
+                  </>
+                ) : (
+                  '○ Esperando jugador...'
+                )}
               </li>
             );
           })}
