@@ -148,6 +148,26 @@ To continuously deploy new code to the backend and print logs:
 npm run dev:backend
 ```
 
+### Desarrollo local desde la LAN
+
+Para acceder desde celulares, crear una vez `.env.development.local` (ignorado por Git) usando la
+IP actual de la PC:
+
+```sh
+VITE_CONVEX_URL=http://<LAN_HOST>:3210
+VITE_PUBLIC_APP_URL=http://<LAN_HOST>:5173
+```
+
+Vite da prioridad a este archivo en desarrollo, por lo que `npm run predev` puede seguir gestionando
+`.env.local` con `CONVEX_SELF_HOSTED_URL=http://127.0.0.1:3210` sin romper las URLs del navegador.
+El workflow normal no requiere editar variables entre comandos:
+
+```sh
+docker compose up -d backend dashboard
+SENTRY_DSN="" npm run dev:backend
+npm run dev:frontend -- --host 0.0.0.0
+```
+
 To see the dashboard, visit `http://localhost:6791` and provide the admin key you generated earlier.
 
 ### Configuring Docker for Ollama
