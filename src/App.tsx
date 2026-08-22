@@ -16,8 +16,18 @@ import InteractButton from './components/buttons/InteractButton.tsx';
 import FreezeButton from './components/FreezeButton.tsx';
 import { MAX_HUMAN_PLAYERS } from '../convex/constants.ts';
 import PoweredByConvex from './components/PoweredByConvex.tsx';
+import LobbyHost from './components/lobby/LobbyHost.tsx';
+import JoinLobbyPage from './components/lobby/JoinLobbyPage.tsx';
 
-export default function Home() {
+export default function App() {
+  const joinMatch = window.location.pathname.match(/\/ai-town\/join\/([^/]+)\/?$/i);
+  if (joinMatch) {
+    return <JoinLobbyPage gameCode={decodeURIComponent(joinMatch[1])} />;
+  }
+  return <Home />;
+}
+
+function Home() {
   const [helpModalOpen, setHelpModalOpen] = useState(false);
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-between font-body game-background">
@@ -87,6 +97,8 @@ export default function Home() {
         </div>
 
         <Game />
+
+        <LobbyHost />
 
         <footer className="justify-end bottom-0 left-0 w-full flex items-center mt-4 gap-3 p-6 flex-wrap pointer-events-none">
           <div className="flex gap-4 flex-grow pointer-events-none">

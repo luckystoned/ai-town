@@ -6,6 +6,21 @@ import { conversationId, playerId } from './aiTown/ids';
 import { engineTables } from './engine/schema';
 
 export default defineSchema({
+  gameSessions: defineTable({
+    code: v.string(),
+    status: v.literal('lobby'),
+    createdAt: v.number(),
+  }).index('code', ['code']),
+
+  lobbyPlayers: defineTable({
+    sessionId: v.id('gameSessions'),
+    name: v.string(),
+    tokenHash: v.string(),
+    joinedAt: v.number(),
+  })
+    .index('sessionId', ['sessionId'])
+    .index('sessionTokenHash', ['sessionId', 'tokenHash']),
+
   music: defineTable({
     storageId: v.string(),
     type: v.union(v.literal('background'), v.literal('player')),
